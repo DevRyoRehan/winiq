@@ -69,6 +69,10 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook', {
   failureRedirect: '/login'
 }));
 
+// 🔍 Health check route for Render
+app.get('/health', (req, res) => {
+  res.send('OK');
+});
 // ✅ Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

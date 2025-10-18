@@ -73,6 +73,29 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook', {
 app.get('/health', (req, res) => {
   res.send('OK');
 });
+
+// 🔐 Auth check middleware
+function ensureAuth(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  res.status(401).json({ error: 'Not authenticated' });
+}
+
+// 🔍 Profile route
+app.get('/profile', ensureAuth, (req, res) => {
+  res.json({
+    name: req.user.displayName || req.user.name || 'User',
+    email: req.user.emails?.[0]?.value || 'N/A',
+    provider: req.user.provider || 'local'
+  });
+});
+
+// 🔓 Logout route
+app.get('/logout', (req, res) => {
+  req.logout(() => {
+    res.redirect('https://winiq-frontend.onrender.com/login');
+  });
+});
+
 // ✅ Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

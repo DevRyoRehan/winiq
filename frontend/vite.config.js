@@ -13,4 +13,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+  server: {
+    port: 5173,
+    open: true,
+    cors: true,
+  }
 });

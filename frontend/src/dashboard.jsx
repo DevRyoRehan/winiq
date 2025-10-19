@@ -4,13 +4,26 @@ function Dashboard() {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
+    console.log("✅ Dashboard mounted");
+
     fetch(`${import.meta.env.VITE_API_BASE}/profile`, {
       credentials: 'include'
     })
-      .then(res => res.json())
+      .then(res => {
+        console.log("🔄 Profile fetch status:", res.status);
+        return res.json();
+      })
       .then(data => {
-        if (data.error) window.location.href = '/login';
-        else setProfile(data);
+        console.log("📦 Profile response:", data);
+        if (data.error) {
+          console.warn("🔐 Not authenticated, redirecting to /login");
+          window.location.href = '/login';
+        } else {
+          setProfile(data);
+        }
+      })
+      .catch(err => {
+        console.error("❌ Fetch error:", err);
       });
   }, []);
 

@@ -10,7 +10,7 @@ const app = express();
 
 // 🔐 CORS setup for frontend
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://winiq-frontend.onrender.com'],
+  origin: ['http://localhost:5173', 'winiq.render.com'],
   credentials: true
 }));
 app.use(express.json());
@@ -58,14 +58,14 @@ app.get('/', (req, res) => {
 // 🔗 Google OAuth routes
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 app.get('/auth/google/callback', passport.authenticate('google', {
-  successRedirect: 'https://winiq-frontend.onrender.com/dashboard',
+  successRedirect: 'winiq.render.com/dashboard',
   failureRedirect: '/login'
 }));
 
 // 🔗 Facebook OAuth routes
 app.get('/auth/facebook', passport.authenticate('facebook'));
 app.get('/auth/facebook/callback', passport.authenticate('facebook', {
-  successRedirect: 'https://winiq-frontend.onrender.com/dashboard',
+  successRedirect: 'winiq.render.com/dashboard',
   failureRedirect: '/login'
 }));
 
@@ -92,7 +92,7 @@ app.get('/profile', ensureAuth, (req, res) => {
 // 🔓 Logout route
 app.get('/logout', (req, res) => {
   req.logout(() => {
-    res.redirect('https://winiq-frontend.onrender.com/login');
+    res.redirect('winiq.render.com/login');
   });
 });
 

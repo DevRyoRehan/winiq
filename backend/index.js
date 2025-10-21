@@ -8,19 +8,29 @@ require('dotenv').config();
 
 const app = express();
 
-// 🔐 CORS setup for frontend
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://winiq.onrender.com'],
-  credentials: true
-}));
-app.use(express.json());
+// ✅ Trust proxy for secure cookies on Render
+app.set('trust proxy', 1);
 
-// 🔐 Session setup
-app.use(session({
-  secret: 'winiq-secret',
-  resave: false,
-  saveUninitialized: true
+// ✅ CORS: allow exact frontend origin
+app.use(cors({
+  origin: ['https://winiq.onrender.com', 'http://localhost:5173'],
+  credentials: true,
 }));
+
+// ✅ Session: secure, cross-site compatible
+app.use(session({
+  name: 'winiq.sid',
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+  }
+}));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -36,7 +46,7 @@ passport.deserializeUser((obj, done) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://winiq-backend.onrender.com/auth/google/callback"
+  callbackURL: process.env.GOOGLE_CALLBACK_URL, // ✅ uses env var
 }, (accessToken, refreshToken, profile, done) => {
   return done(null, profile);
 }));
@@ -45,7 +55,7 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: "https://winiq-backend.onrender.com/auth/facebook/callback"
+  callbackURL: process.env.FACEBOOK_CALLBACK_URL, // ✅ uses env var
 }, (accessToken, refreshToken, profile, done) => {
   return done(null, profile);
 }));

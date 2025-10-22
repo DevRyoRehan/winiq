@@ -4,13 +4,11 @@ import Dashboard from './dashboard';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+         <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </BrowserRouter>
+      </Routes>  
   );
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 function Dashboard() {
   const [profile, setProfile] = useState(null);
@@ -6,25 +7,22 @@ function Dashboard() {
   useEffect(() => {
     console.log("✅ Dashboard mounted");
 
-    fetch(`${import.meta.env.VITE_API_BASE}/profile`, {
-      credentials: 'include'
+    axios.get(`${import.meta.env.VITE_API_BASE}/profile`, {
+      withCredentials: true
     })
-      .then(res => {
-        console.log("🔄 Profile fetch status:", res.status);
-        return res.json();
-      })
-      .then(data => {
-        console.log("📦 Profile response:", data);
-        if (data.error) {
-          console.warn("🔐 Not authenticated, redirecting to /login");
-          window.location.href = '/login';
-        } else {
-          setProfile(data);
-        }
-      })
-      .catch(err => {
-        console.error("❌ Fetch error:", err);
-      });
+    .then(res => {
+      console.log("🔄 Profile fetch status:", res.status);
+      console.log("📦 Profile response:", res.data);
+      if (res.data.error) {
+        console.warn("🔐 Not authenticated, redirecting to /login");
+        window.location.href = '/login';
+      } else {
+        setProfile(res.data);
+      }
+    })
+    .catch(err => {
+      console.error("❌ Axios fetch error:", err);
+    });
   }, []);
 
   const handleLogout = () => {

@@ -7,19 +7,16 @@ const FacebookStrategy = require('passport-facebook').Strategy;
 require('dotenv').config();
 
 const app = express();
-
-// ✅ Trust proxy for Render (important for secure cookies)
 app.set('trust proxy', 1);
 
-// ✅ CORS: allow frontend and local dev
+// ✅ Middleware
+app.use(express.json());
 app.use(
   cors({
     origin: ['https://winiq.onrender.com', 'http://localhost:5173'],
     credentials: true,
   })
 );
-
-// ✅ Session: secure cross-site cookie (works across subdomains)
 app.use(
   session({
     name: 'winiq.sid',
@@ -29,23 +26,20 @@ app.use(
     proxy: true,
     cookie: {
       httpOnly: true,
-      secure: true, // Required for HTTPS
-      sameSite: 'none', // Required for cross-site
-      domain: '.onrender.com', // ✅ Makes cookie valid for both subdomains
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      secure: true,
+      sameSite: 'none',
+      domain: '.onrender.com',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
 );
-
-// ✅ Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// 🔐 Serialize / Deserialize
+// ✅ Passport config
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
-// 🔐 Google Strategy
 passport.use(
   new GoogleStrategy(
     {
@@ -57,7 +51,6 @@ passport.use(
   )
 );
 
-// 🔐 Facebook Strategy
 passport.use(
   new FacebookStrategy(
     {
@@ -69,43 +62,46 @@ passport.use(
   )
 );
 
-// 🏠 Health Check
+// ✅ Routes
 app.get('/health', (req, res) => res.send('OK'));
-
-// 🌐 Root route
 app.get('/', (req, res) => res.send('WinIQ backend is running'));
 
-// 🔗 Google OAuth routes
-app.get(
-  '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+// 🔐 Email/password login (mock)
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  if (email === 'test@winiq.com' && password === '123456') {
+    req.login({ name: 'Test User', email, provider: 'local' }, err => {
+      if (err) return res.status(500).json({ error: 'Login failed' });
+      return res.json({ name: 'Test User' });
+    });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+// 🔗 Google OAuth
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
-  (req, res) => {
-    // redirect to frontend dashboard after success
-    res.redirect('https://winiq.onrender.com/dashboard');
-  }
+  (req, res) => res.redirect('https://winiq.onrender.com/dashboard')
 );
 
-// 🔗 Facebook OAuth routes
+// 🔗 Facebook OAuth
 app.get('/auth/facebook', passport.authenticate('facebook'));
 app.get(
   '/auth/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: '/login' }),
-  (req, res) => {
-    res.redirect('https://winiq.onrender.com/dashboard');
-  }
+  (req, res) => res.redirect('https://winiq.onrender.com/dashboard')
 );
 
-// 🧩 Auth check middleware
+// 🔒 Auth check
 function ensureAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.status(401).json({ error: 'Not authenticated' });
 }
 
-// 👤 Profile route
+// 👤 Profile
 app.get('/profile', ensureAuth, (req, res) => {
   res.json({
     name: req.user.displayName || req.user.name || 'User',
@@ -114,7 +110,7 @@ app.get('/profile', ensureAuth, (req, res) => {
   });
 });
 
-// 🚪 Logout route (safe for Render)
+// 🚪 Logout
 app.get('/logout', (req, res, next) => {
   req.logout(err => {
     if (err) return next(err);
@@ -129,7 +125,7 @@ app.get('/logout', (req, res, next) => {
   });
 });
 
-// 🧪 Debug route (optional)
+// 🧪 Debug
 app.get('/debug-session', (req, res) => {
   res.json({
     authenticated: req.isAuthenticated(),
